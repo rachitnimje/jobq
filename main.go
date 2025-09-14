@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 	"sync"
-	"time"
 )
 
 func main() {
@@ -15,23 +17,20 @@ func main() {
 		WG:    &wg,
 	}
 
+	// define routes
+	router := mux.NewRouter()
+	router.HandleFunc("/enqueue", server.EnqueueHandler).Methods("POST")
+	router.HandleFunc("/status/{id}", server.StatusHandler).Methods("GET")
+
+	// start the workers
 	totalWorkers := 100
 	StartWorkerPool(totalWorkers, server)
 
-	totalJobs := 1000
-	startTime := time.Now()
-
-	StartDispatcher(totalJobs, server)
-	close(server.Queue)
-
-	wg.Wait()
-
-	elapsed := time.Since(startTime).Seconds()
-	throughput := float64(totalJobs) / elapsed
-	jobsPerWorker := float64(totalJobs) / float64(totalWorkers)
-
-	fmt.Printf("completed %d jobs by %d workers in %f seconds (%f jobs/sec)\n",
-		totalJobs, totalWorkers, elapsed, throughput)
-	fmt.Printf("avg jobs per worker: %f\n", jobsPerWorker)
-
+	// start the http server
+	fmt.Println("Server running at :8080")
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		log.Fatal("Error starting http server on port 8080. ", err)
+		return
+	}
 }

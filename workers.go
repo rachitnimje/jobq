@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
-func StartWorkerPool(n int, server *JobServer) {
+func StartWorkerPool(n int, server *JobServer, workersWg *sync.WaitGroup) {
 	for id := 1; id <= n; id++ {
-		go worker(id, server)
+		workersWg.Add(1)
+		go worker(id, server, workersWg)
 	}
 }
 
-func worker(id int, server *JobServer) {
+func worker(id int, server *JobServer, workersWg *sync.WaitGroup) {
+	defer workersWg.Done()
+
 	for job := range server.Queue {
 		fmt.Printf("Worker ID %d executing job ID %s.\n", id, job.ID)
 
@@ -28,4 +32,6 @@ func worker(id int, server *JobServer) {
 
 		server.WG.Done()
 	}
+
+	fmt.Printf("Worker %d shutting down...\n", id)
 }

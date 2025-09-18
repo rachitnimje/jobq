@@ -13,7 +13,7 @@ const (
 
 type Job struct {
 	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
 	Payload   string    `json:"payload"`
 	Status    JobStatus `json:"status"`
-	CreatedAt time.Time `json:"createdAt"`
 }

@@ -13,17 +13,25 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rachitnimje/jobq/database"
 )
 
 func main() {
+
+	db, err := database.Connect()
+	if err != nil {
+		log.Fatal("Error connecting to DB: ", err)
+		return
+	}
+
 	var jobsWg sync.WaitGroup
 	var workersWg sync.WaitGroup
 
 	server := &JobServer{
 		Queue: make(chan *Job, 1000),
-		Map:   make(map[string]*Job),
 		Mutex: &sync.RWMutex{},
 		WG:    &jobsWg,
+		DB:    db,
 	}
 
 	// start the workers
